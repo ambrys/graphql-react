@@ -9,7 +9,7 @@ const axiosGitHubGraphQL = axios.create({
     },
 });
 
-const GET_ISSUES_OF_REPO_QUERY = `
+const GET_ISSUES_OF_REPO = `
     query($organization: String!, $repository: String!)
     {
         organization(login: $organization) {
@@ -87,6 +87,20 @@ const Repository = ({ repository, onFetchMoreIssues }) => (
     </div>
 
 );
+const getIssuesOfRepoQuery = (path, cursor) => {
+    const [organization, repository] = path.split('/');
+
+    return axiosGitHubGraphQL.post('', {
+        query: GET_ISSUES_OF_REPO,
+        variables: { organization, repository, cursor, }
+    })
+}
+
+const resolveIssuesOfRepoQuery = queryResult => () => ({
+    oraganization: queryResult.data.data.organization,
+    errors: queryResult.data.errors,
+})
+/* Composite function --> resolve(queryResult) { return (() => ({...})) } */
 
 class App extends Component {
     state = {
@@ -106,19 +120,23 @@ class App extends Component {
     onChange = event => {
         this.setState({ path: event.target.value });
     };
-    onFetchFromGithub = (path) => {
-        const [organization, repository] = path.split('/')
+    onFetchFromGithub = (path, cursor) => {
 
-        axiosGitHubGraphQL
-            .post('', { query: GET_ISSUES_OF_REPO_QUERY, 
-                        variables: { organization, repository,}})
-            .then(result => {
-                console.log(result);
-                this.setState(() => ({
-                    organization: result.data.data.organization,
-                    errors: result.data.errors,
-                }));
-            });
+    /* EXTRACTED OUT INTO HIGHER-ORDERED FUNCTONS --> getIssuesOfRepoQuery() and resolveIssuesOfRepoQuery() */
+        // const [organization, repository] = path.split('/');
+        // return axiosGitHubGraphQL.post('', {
+        //     query: GET_ISSUES_OF_REPO,
+        //     variables: { organization, repository, cursor, }
+        //     }).then(result => {
+        //         console.log(result);
+        //         this.setState(() => ({
+        //             organization: result.data.data.organization,
+        //             errors: result.data.errors,
+        //         }));
+        //     });
+        getIssuesOfRepoQuery(path, cursor).then(queryResult => 
+            this.setState(resolveIssuesOfRepoQuery(queryResult, cursor))
+        );
     };
 
     onFetchMoreIssues = () => {
