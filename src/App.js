@@ -120,7 +120,7 @@ class App extends Component {
     onChange = event => {
         this.setState({ path: event.target.value });
     };
-    onFetchFromGithub = (pah, cursor) => {
+    onFetchFromGithub = (path, cursor) => {
 
     /* EXTRACTED OUT INTO HIGHER-ORDERED FUNCTONS --> getIssuesOfRepoQuery() and resolveIssuesOfRepoQuery() */
         // const [organization, repository] = path.split('/');
